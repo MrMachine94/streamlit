@@ -34,8 +34,12 @@ st.header("How many collisions occur during a given time of day")
 hour = st.selectbox("Hour to look at:", range(0,24),1)
 data = data[data["date/time"].dt.hour == hour]
 
+st.markdown("Vehicle collisions between %i:00 and %i:00" % (hour,(hour + 1) %24))
+
+
+
+
 # Checkbox of raw data
 if st.sidebar.checkbox("Show Raw Data", False):
     st.subheader("Raw Data")
     st.write(data)
-
