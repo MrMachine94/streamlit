@@ -21,14 +21,21 @@ def load_data(nrows) :
 
 data = load_data(100000)
 
-# The question here using st.header
+# The 1st question here using st.header
 st.header("Where are the most people injured in NYC?")
 
 injured_people = st.slider("Number of Person injured in Vehicle Collision:",0, 19) # Slider minimum number and maximum 19
 # Plot Data in map / filtering injured person and na values
 st.map(data.query("injured_persons >= @injured_people")[["latitude", "longitude"]].dropna(how =  "any")) #lowercase operation
+
+# The 2nd question
+st.header("How many collisions occur during a given time of day")
+# More interactive using dropdown selectbox
+hour = st.selectbox("Hour to look at:", range(0,24),1)
+data = data[data["date/time"].dt.hour == hour]
+
 # Checkbox of raw data
-if st.checkbox("Show Raw Data", False):
+if st.sidebar.checkbox("Show Raw Data", False):
     st.subheader("Raw Data")
     st.write(data)
 
