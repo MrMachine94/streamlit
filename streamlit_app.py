@@ -1,6 +1,9 @@
+from select import select
 import streamlit as st
 import pandas as pd
 import numpy as np
+import pydeck as pdk
+import plotly.express as px
 
 DATA_URL = (
 "https://raw.githubusercontent.com/MrMachine94/streamlit/main/Motor_Vehicle_Collisions_-_Crashes.csv"
@@ -20,6 +23,7 @@ def load_data(nrows) :
     return data
 
 data = load_data(100000)
+original_data = data
 
 # The 1st question here using st.header
 st.header("Where are the most people injured in NYC?")
@@ -32,14 +36,57 @@ st.map(data.query("injured_persons >= @injured_people")[["latitude", "longitude"
 st.header("How many collisions occur during a given time of day")
 # More interactive using dropdown selectbox
 hour = st.selectbox("Hour to look at:", range(0,24),1)
+# Slider type -> hour = st.slider("Hour to look at:", 0,23)
+# Data to parse in 2nd question selectbox dropdown
 data = data[data["date/time"].dt.hour == hour]
 
 st.markdown("Vehicle collisions between %i:00 and %i:00" % (hour,(hour + 1) %24))
+# Initial coordinate for new york city by calculating midpoint of longitude and langitude
+midpoint = (np.average(data["latitude"]),np.average(data["longitude"]))
 
+st.write(pdk.Deck(
+    map_style = "mapbox://styles/mapbox/light-v9",
+    initial_view_state = {
+        "latitude":midpoint[0],
+        "longitude":midpoint[1],
+        #Degree of freedom for zoom pitch
+        "zoom": 11,
+        "pitch" : 50,
+    },
+    # Data points for 3D plot
+    layers=[
+        pdk.Layer(
+            "HexagonLayer",
+            # Subset of data with time interval
+            data = data[["date/time", 'latitude', "longitude"]],
+            get_position = ["longitude", "latitude"],
+            radius = 100,
+            extruded = True,
+            pickable = True,
+            elevation_scale = 4,
+            elevation_range = [0, 1000],
+        ),
+    ],   
+))
+# Plotly barchart / histogram from line 70 to 77
+st.subheader("Breakdown by minute between %i:00 and %i:00" % (hour, (hour + 1) %24))
+filtered = data[
+    (data["date/time"].dt.hour >= hour) & (data["date/time"].dt.hour < (hour+1))
+]
+hist = np.histogram(filtered["date/time"].dt.minute, bins=60, range=(0,60))[0]
+chart_data = pd.DataFrame({"minute": range(60), "crashes": hist})
+fig = px.bar(chart_data, x="minute", y="crashes", hover_data=["minute","crashes"], height=400)
+st.write(fig)
 
+# Select data using dropdowns
+st.header("Top 5 of dangerous streets affected type")
+select = st.selectbox("Affected type of people:", ["Pedestrians","Cyclists","Motorists"])
 
+if select == "Pedestrians":
+    st.write(original_data.query("injured_pedestrians >= 1")[["on_street_name","injured_pedestrians"]].sort_values(by=["injured_pedestrians"], ascending = False).dropna(how = "any")[:5])
 
+# You can make a sidebar part with syntax st.sidebar.checkbox
 # Checkbox of raw data
-if st.sidebar.checkbox("Show Raw Data", False):
+if st.checkbox("Show Raw Data", False):
     st.subheader("Raw Data")
     st.write(data)
