@@ -5,7 +5,7 @@ import pydeck as pdk
 import plotly.express as px
 
 DATA_URL = (
-"https://raw.githubusercontent.com/MrMachine94/streamlit/main/Motor_Vehicle_Collisions_-_Crashes.csv"
+"https://raw.githubusercontent.com/shamsuriazmi/streamlit/main/Motor_Vehicle_Collisions_-_Crashes.csv"
 )
 st.title("Motor Vehicle Collisions in New York City 🗽💥")
 st.markdown("This application is a Streamlit Dashboard that can be used "
